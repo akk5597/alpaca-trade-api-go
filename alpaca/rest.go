@@ -28,6 +28,7 @@ type Client interface {
 	GetClock() (*Clock, error)
 	GetCalendar(start, end *string) ([]CalendarDay, error)
 	ListOrders(status *string, until *time.Time, limit *int, nested *bool) ([]Order, error)
+	ListOrders2(req ListOrderRequest) ([]Order, error)
 	PlaceOrder(req PlaceOrderRequest) (*Order, error)
 	GetOrder(orderID string) (*Order, error)
 	GetOrderByClientOrderID(clientOrderID string) (*Order, error)
@@ -417,10 +418,24 @@ func (c *client) GetCalendar(start, end *string) ([]CalendarDay, error) {
 
 // ListOrders returns the list of orders for an account,
 // filtered by the input parameters.
+//
+// Deprecated: Use ListOrders2
 func (c *client) ListOrders(status *string, until *time.Time, limit *int, nested *bool) ([]Order, error) {
+	req := ListOrderRequest{
+		Status: status,
+		Until:  until,
+		Limit:  limit,
+		Nested: nested,
+	}
+	return c.ListOrders2(req)
+}
+
+// ListOrders returns the list of orders for an account,
+// filtered by the input parameters.
+func (c *client) ListOrders2(req ListOrderRequest) ([]Order, error) {
 	urlString := fmt.Sprintf("%s/%s/orders", c.opts.BaseURL, apiVersion)
-	if nested != nil {
-		urlString += fmt.Sprintf("?nested=%v", *nested)
+	if req.Nested != nil {
+		urlString += fmt.Sprintf("?nested=%v", *req.Nested)
 	}
 	u, err := url.Parse(urlString)
 	if err != nil {
@@ -429,16 +444,28 @@ func (c *client) ListOrders(status *string, until *time.Time, limit *int, nested
 
 	q := u.Query()
 
-	if status != nil {
-		q.Set("status", *status)
+	if req.Status != nil {
+		q.Set("status", *req.Status)
 	}
 
-	if until != nil {
-		q.Set("until", until.Format(time.RFC3339))
+	if req.Until != nil {
+		q.Set("until", req.Until.Format(time.RFC3339))
 	}
 
-	if limit != nil {
-		q.Set("limit", strconv.FormatInt(int64(*limit), 10))
+	if req.Limit != nil {
+		q.Set("limit", strconv.FormatInt(int64(*req.Limit), 10))
+	}
+
+	if req.After != nil {
+		q.Set("after", req.After.Format(time.RFC3339))
+	}
+
+	if req.Direction != nil {
+		q.Set("direction", *req.Direction)
+	}
+
+	if req.Symbols != nil {
+		q.Set("symbols", strings.Join(req.Symbols, ","))
 	}
 
 	u.RawQuery = q.Encode()
@@ -680,8 +707,17 @@ func GetCalendar(start, end *string) ([]CalendarDay, error) {
 // ListOrders returns the list of orders for an account,
 // filtered by the input parameters using the default
 // Alpaca client.
+//
+// Deprecated: Use ListOrders2
 func ListOrders(status *string, until *time.Time, limit *int, nested *bool) ([]Order, error) {
 	return DefaultClient.ListOrders(status, until, limit, nested)
+}
+
+// ListOrders returns the list of orders for an account,
+// filtered by the input parameters using the default
+// Alpaca client.
+func ListOrders2(req ListOrderRequest) ([]Order, error) {
+	return DefaultClient.ListOrders2(req)
 }
 
 // PlaceOrder submits an order request to buy or sell an asset

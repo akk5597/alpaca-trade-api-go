@@ -66,7 +66,11 @@ func init() {
 func main() {
 	fmt.Println("Cancelling all open orders so they don't impact our buying power...")
 	status, until, limit := "open", time.Now(), 100
-	orders, err := algo.tradeClient.ListOrders(&status, &until, &limit, nil)
+	orders, err := algo.tradeClient.ListOrders2(alpaca.ListOrderRequest{
+		Status: &status,
+		Until:  &until,
+		Limit:  &limit,
+	})
 	if err != nil {
 		log.Fatalf("Failed to list orders: %v", err)
 	}

@@ -174,6 +174,16 @@ type PortfolioHistory struct {
 	Timestamp     []int64           `json:"timestamp"`
 }
 
+type ListOrderRequest struct {
+	Status    *string    `json:"status"`
+	Until     *time.Time `json:"until"`
+	Limit     *int       `json:"limit"`
+	Nested    *bool      `json:"nested"`
+	After     *time.Time `json:"after"`
+	Direction *string    `json:"direction"`
+	Symbols   []string   `json:"symbols"`
+}
+
 type PlaceOrderRequest struct {
 	AccountID     string           `json:"-"`
 	AssetKey      *string          `json:"symbol"`
